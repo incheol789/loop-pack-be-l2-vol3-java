@@ -102,4 +102,29 @@ class MemberServiceIntegrationTest {
 			assertThat(result.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
 		}
 	}
+
+	@DisplayName("비밀번호를 변경할 때,")
+	@Nested
+	class ChangePassword {
+
+		@DisplayName("비밀번호 변경 후 새 비밀번호로 조회하면, 정상 반환된다.")
+		@Test
+		void changePasswordAndGetMyInfoSuccess() {
+			// given
+			String loginId = "testuser";
+			String currentPassword = "password1!@";
+			String newPassword = "newpass1!@#";
+			memberService.register(loginId, currentPassword, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			// when
+			memberService.changePassword(loginId, currentPassword, newPassword);
+
+			// then
+			MemberModel result = memberService.getMyInfo(loginId, newPassword);
+			assertAll(
+					() -> assertThat(result.getLoginId()).isEqualTo(loginId),
+					() -> assertThat(result.getPassword()).isEqualTo(PasswordEncoder.encode(newPassword))
+			);
+		}
+	}
 }

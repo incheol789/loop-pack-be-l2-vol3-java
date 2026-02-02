@@ -228,4 +228,83 @@ class MemberModelTest {
 			assertThat(result).isEqualTo("*");
 		}
 	}
+
+	@DisplayName("비밀번호를 변경할 때,")
+	@Nested
+	class ChangePassword {
+
+		@DisplayName("유효한 새 비밀번호로 변경하면, 비밀번호가 변경된다.")
+		@Test
+		void changePasswordSuccess() {
+			// given
+			MemberModel member = new MemberModel("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+			String newPassword = "newpass1!@";
+
+			// when
+			member.changePassword(newPassword);
+
+			// then
+			assertThat(member.getPassword()).isEqualTo(newPassword);
+		}
+
+		@DisplayName("새 비밀번호에 허용되지 않는 문자(한글)가 포함되면, BAD_REQUEST 예외가 발생한다.")
+		@Test
+		void failWithKoreanNewPassword() {
+			// given
+			MemberModel member = new MemberModel("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			// when
+			CoreException result = assertThrows(CoreException.class, () ->
+					member.changePassword("새비밀번호입력!@")
+			);
+
+			// then
+			assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+		}
+
+		@DisplayName("새 비밀번호가 8자 미만이면, BAD_REQUEST 예외가 발생한다.")
+		@Test
+		void failWithShortNewPassword() {
+			// given
+			MemberModel member = new MemberModel("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			// when
+			CoreException result = assertThrows(CoreException.class, () ->
+					member.changePassword("short!")
+			);
+
+			// then
+			assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+		}
+
+		@DisplayName("새 비밀번호가 16자 초과이면, BAD_REQUEST 예외가 발생한다.")
+		@Test
+		void failWithLongNewPassword() {
+			// given
+			MemberModel member = new MemberModel("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			// when
+			CoreException result = assertThrows(CoreException.class, () ->
+					member.changePassword("a".repeat(17))
+			);
+
+			// then
+			assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+		}
+
+		@DisplayName("새 비밀번호에 생년월일이 포함되면, BAD_REQUEST 예외가 발생한다.")
+		@Test
+		void failWithBirthDateInNewPassword() {
+			// given
+			MemberModel member = new MemberModel("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			// when
+			CoreException result = assertThrows(CoreException.class, () ->
+					member.changePassword("pass20000605!")
+			);
+
+			// then
+			assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+		}
+	}
 }

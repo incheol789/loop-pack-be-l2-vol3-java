@@ -27,6 +27,7 @@ class MemberV1ApiE2ETest {
 
 	private static final String ENDPOINT_REGISTER = "/api/v1/members";
 	private static final String ENDPOINT_ME = "/api/v1/members/me";
+	private static final String ENDPOINT_CHANGE_PASSWORD = "/api/v1/members/me/password";
 
 	private final TestRestTemplate testRestTemplate;
 	private final MemberService memberService;
@@ -157,6 +158,54 @@ class MemberV1ApiE2ETest {
 			ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>> responseType = new ParameterizedTypeReference<>() {};
 			ResponseEntity<ApiResponse<MemberV1Dto.MyInfoResponse>> response = testRestTemplate.exchange(
 					ENDPOINT_ME, HttpMethod.GET, new HttpEntity<>(null), responseType
+			);
+
+			// then
+			assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@DisplayName("PATCH /api/v1/members/me/password")
+	@Nested
+	class ChangePassword {
+
+		@DisplayName("유효한 인증 정보와 새 비밀번호로 변경하면, 200 응답을 받는다.")
+		@Test
+		void changePasswordSuccess() {
+			// given
+			String loginId = "testuser";
+			String currentPassword = "password1!@";
+			String newPassword = "newpass1!@#";
+			memberService.register(loginId, currentPassword, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			HttpHeaders headers = authHeaders(loginId, currentPassword);
+			MemberV1Dto.ChangePasswordRequest request = new MemberV1Dto.ChangePasswordRequest(newPassword);
+
+			// when
+			ParameterizedTypeReference<ApiResponse<Void>> responseType = new ParameterizedTypeReference<>() {};
+			ResponseEntity<ApiResponse<Void>> response = testRestTemplate.exchange(
+					ENDPOINT_CHANGE_PASSWORD, HttpMethod.PATCH, new HttpEntity<>(request, headers), responseType
+			);
+
+			// then
+			assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+		}
+
+		@DisplayName("현재 비밀번호와 동일한 비밀번호로 변경하면, 400 BAD_REQUEST 응답을 받는다.")
+		@Test
+		void failWithSamePassword() {
+			// given
+			String loginId = "testuser";
+			String password = "password1!@";
+			memberService.register(loginId, password, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+
+			HttpHeaders headers = authHeaders(loginId, password);
+			MemberV1Dto.ChangePasswordRequest request = new MemberV1Dto.ChangePasswordRequest(password);
+
+			// when
+			ParameterizedTypeReference<ApiResponse<Void>> responseType = new ParameterizedTypeReference<>() {};
+			ResponseEntity<ApiResponse<Void>> response = testRestTemplate.exchange(
+					ENDPOINT_CHANGE_PASSWORD, HttpMethod.PATCH, new HttpEntity<>(request, headers), responseType
 			);
 
 			// then
