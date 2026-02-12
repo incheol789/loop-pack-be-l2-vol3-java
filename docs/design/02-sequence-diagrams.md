@@ -117,7 +117,7 @@ sequenceDiagram
     Note over User,DB: 좋아요 등록
     User->>API: POST /api/v1/products/{productId}/likes
     API->>LS: addLike(userId, productId)
-    LS->>DB: SELECT like WHERE user_id = ? AND product_id = ?
+    LS->>DB: SELECT like WHERE user_id = ? AND product_id = ? AND deleted_at IS NULL
 
     alt 이미 좋아요 존재
         DB-->>LS: Like 존재
@@ -133,7 +133,7 @@ sequenceDiagram
     Note over User,DB: 좋아요 취소
     User->>API: DELETE /api/v1/products/{productId}/likes
     API->>LS: removeLike(userId, productId)
-    LS->>DB: SELECT like WHERE user_id = ? AND product_id = ?
+    LS->>DB: SELECT like WHERE user_id = ? AND product_id = ? AND deleted_at IS NULL
 
     alt 좋아요 없음
         DB-->>LS: null
@@ -141,13 +141,13 @@ sequenceDiagram
         API-->>User: 404 Not Found
     else 좋아요 존재
         DB-->>LS: Like
-        LS->>DB: DELETE like
+        LS->>DB: UPDATE like SET deleted_at = now()
         LS-->>API: 완료
         API-->>User: 200 OK
     end
 ```
 
 ### 핵심 포인트
-- 좋아요는 **물리 삭제** — 소프트 삭제와 달리 취소하면 row 자체를 제거한다 (좋아요 이력 보존 불필요)
-- `(user_id, product_id)` 유니크 제약으로 DB 레벨에서도 중복 방지
-- 좋아요 수 집계는 좋아요 테이블의 COUNT로 처리 (비정규화는 추후 검토)
+- 좋아요는 **소프트 삭제** — 취소 시 `deleted_at`을 설정하여 논리적으로 삭제한다 (실수 대비 복구 가능)
+- `(user_id, product_id)` 유니크 제약 + `deleted_at IS NULL` 조건으로 중복 방지
+- 좋아요 수 집계는 `deleted_at IS NULL` 조건의 COUNT로 처리 (비정규화는 추후 검토)

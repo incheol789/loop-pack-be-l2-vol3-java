@@ -105,8 +105,8 @@ erDiagram
 - 소프트 삭제된 상품은 고객 조회에서 제외.
 
 ### `product_like`
-- `(user_id, product_id)` 유니크 제약으로 중복 좋아요 방지.
-- 좋아요 취소 시 물리 삭제 (row 제거).
+- `(user_id, product_id)` 유니크 제약 + `deleted_at IS NULL` 조건으로 중복 좋아요 방지.
+- 좋아요 취소 시 소프트 삭제 (`deleted_at` 설정). 실수 대비 복구 가능.
 
 ### `orders`
 - 테이블명이 `orders`인 이유: `order`는 SQL 예약어.
