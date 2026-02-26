@@ -13,12 +13,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.server.ServerWebInputException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -100,17 +97,6 @@ public class ApiControllerAdvice {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ApiResponse<?>> handleBadRequest(ServerWebInputException e) {
-        String missingParams = extractMissingParameter(e.getReason() != null ? e.getReason() : "");
-        if (!missingParams.isEmpty()) {
-            String message = String.format("필수 요청 값 '%s'가 누락되었습니다.", missingParams);
-            return failureResponse(ErrorType.BAD_REQUEST, message);
-        } else {
-            return failureResponse(ErrorType.BAD_REQUEST, null);
-        }
-    }
-
-    @ExceptionHandler
     public ResponseEntity<ApiResponse<?>> handleNotFound(NoResourceFoundException e) {
         return failureResponse(ErrorType.NOT_FOUND, null);
     }
@@ -119,12 +105,6 @@ public class ApiControllerAdvice {
     public ResponseEntity<ApiResponse<?>> handle(Throwable e) {
         log.error("Exception : {}", e.getMessage(), e);
         return failureResponse(ErrorType.INTERNAL_ERROR, null);
-    }
-
-    private String extractMissingParameter(String message) {
-        Pattern pattern = Pattern.compile("'(.+?)'");
-        Matcher matcher = pattern.matcher(message);
-        return matcher.find() ? matcher.group(1) : "";
     }
 
     private ResponseEntity<ApiResponse<?>> failureResponse(ErrorType errorType, String errorMessage) {
