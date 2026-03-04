@@ -2,7 +2,6 @@ package com.loopers.interfaces.api.coupon;
 
 import com.loopers.application.coupon.CouponAdminFacade;
 import com.loopers.application.coupon.CouponInfo;
-import com.loopers.application.coupon.UserCouponInfo;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.CouponType;
 import com.loopers.interfaces.api.ApiResponse;
@@ -25,13 +24,10 @@ public class CouponAdminV1Controller implements CouponAdminV1ApiSpec {
     public ApiResponse<CouponAdminV1Dto.CouponResponse> register(
             @RequestBody CouponAdminV1Dto.RegisterRequest request
     ) {
-        BigDecimal discountAmount = request.type() == CouponType.FIXED ? request.value() : null;
-        Integer discountRate = request.type() == CouponType.RATE ? request.value().intValue() : null;
-
         CouponInfo info = couponAdminFacade.register(
                 new CouponService.RegisterCommand(
-                        request.name(), request.type(), discountAmount,
-                        discountRate, request.minOrderAmount(), request.expiredAt()
+                        request.name(), request.type(), request.value(),
+                        request.minOrderAmount(), request.expiredAt()
                 )
         );
         return ApiResponse.success(toCouponResponse(info));

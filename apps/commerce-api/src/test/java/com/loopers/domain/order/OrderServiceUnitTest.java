@@ -48,7 +48,7 @@ public class OrderServiceUnitTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            OrderModel result = orderService.createOrder(memberId, items);
+            OrderModel result = orderService.createOrder(memberId, items, null, 0);
 
             // then
             assertAll(
@@ -69,7 +69,7 @@ public class OrderServiceUnitTest {
         void getByIdSuccess() {
             // given
             List<OrderItemModel> items = List.of(new OrderItemModel(1L, "에어맥스", "나이키", 129000, 1));
-            OrderModel order = new OrderModel(1L, items);
+            OrderModel order = new OrderModel(1L, items, null, 0);
             when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
             // when
@@ -106,7 +106,7 @@ public class OrderServiceUnitTest {
             List<OrderItemModel> items = List.of(
                     new OrderItemModel(1L, "에어맥스", "나이키", 129000, 1)
             );
-            List<OrderModel> orders = List.of(new OrderModel(1L, items));
+            List<OrderModel> orders = List.of(new OrderModel(1L, items, null, 0));
             when(orderRepository.findAllByMemberId(1L)).thenReturn(orders);
 
             // when

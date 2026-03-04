@@ -4,13 +4,7 @@ import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderInfo;
 import com.loopers.interfaces.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,7 +26,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
                 .map(item -> new OrderFacade.OrderItemRequest(item.productId(), item.quantity()))
                 .toList();
 
-        OrderInfo info = orderFacade.createOrder(loginId, loginPw, itemRequests);
+        OrderInfo info = orderFacade.createOrder(loginId, loginPw, itemRequests, request.couponId());
         return ApiResponse.success(toResponse(info));
     }
 
@@ -51,7 +45,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
     ) {
         List<OrderInfo> orders = orderFacade.getByMember(loginId, loginPw);
         List<OrderV1Dto.OrderResponse> responses = orders.stream()
-                .map(this::toResponse)     // 각 OrderInfo를 OrderResponse로 변환
+                .map(this::toResponse)
                 .toList();
         return ApiResponse.success(new OrderV1Dto.OrderListResponse(responses));
     }
@@ -69,7 +63,9 @@ public class OrderV1Controller implements OrderV1ApiSpec {
                 .toList();
 
         return new OrderV1Dto.OrderResponse(
-                info.id(), info.memberId(), info.totalAmount(), items
+                info.id(), info.memberId(),
+                info.originalAmount(), info.discountAmount(), info.totalAmount(),
+                info.userCouponId(), items
         );
     }
 }

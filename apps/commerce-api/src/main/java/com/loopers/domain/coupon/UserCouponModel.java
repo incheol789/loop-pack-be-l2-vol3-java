@@ -57,8 +57,4 @@ public class UserCouponModel extends BaseEntity {
         }
     }
 
-    // 만료 확인
-    public boolean isExpired() {
-        return this.status == UserCouponStatus.EXPIRED;
-    }
 }

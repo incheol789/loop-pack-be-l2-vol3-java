@@ -5,7 +5,8 @@ import java.util.List;
 public class OrderV1Dto {
 
     public record CreateRequest(
-            List<OrderItemRequest> items
+            List<OrderItemRequest> items,
+            Long couponId
     ) {
     }
 
@@ -18,7 +19,10 @@ public class OrderV1Dto {
     public record OrderResponse(
             Long id,
             Long memberId,
+            int originalAmount,
+            int discountAmount,
             int totalAmount,
+            Long userCouponId,
             List<OrderItemResponse> items
     ) {
     }

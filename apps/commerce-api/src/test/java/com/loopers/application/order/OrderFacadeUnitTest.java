@@ -7,6 +7,8 @@ import com.loopers.domain.member.MemberService;
 import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.coupon.UserCouponService;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductService;
@@ -52,6 +54,12 @@ class OrderFacadeUnitTest {
     @Mock
     private PointService pointService;
 
+    @Mock
+    private CouponService couponService;
+
+    @Mock
+    private UserCouponService userCouponService;
+
     @InjectMocks
     private OrderFacade orderFacade;
 
@@ -72,7 +80,7 @@ class OrderFacadeUnitTest {
 
             BrandModel brand = new BrandModel("나이키", "스포츠 브랜드", "https://example.com/nike.png");
             OrderItemModel savedItem = new OrderItemModel(10L, "에어맥스", "나이키", 129000, 2);
-            OrderModel order = new OrderModel(1L, List.of(savedItem));
+            OrderModel order = new OrderModel(1L, List.of(savedItem), null, 0);
             ReflectionTestUtils.setField(order, "id", 100L);
 
             // when
@@ -80,14 +88,14 @@ class OrderFacadeUnitTest {
             when(productService.getById(10L)).thenReturn(product);
             when(brandService.getById(1L)).thenReturn(brand);
 
-            when(orderService.createOrder(eq(1L), any())).thenReturn(order);
+            when(orderService.createOrder(eq(1L), any(), any(), eq(0))).thenReturn(order);
             when(orderService.getOrderItems(100L)).thenReturn(List.of(savedItem));
 
             List<OrderFacade.OrderItemRequest> requests = List.of(
                     new OrderFacade.OrderItemRequest(10L, 2)
             );
 
-            OrderInfo result = orderFacade.createOrder("testuser", "password1!@", requests);
+            OrderInfo result = orderFacade.createOrder("testuser", "password1!@", requests, null);
 
             // then
             assertAll(
@@ -97,7 +105,7 @@ class OrderFacadeUnitTest {
                     () -> assertThat(result.items().get(0).brandName()).isEqualTo("나이키")
             );
 
-            verify(productService).decreaseStock(10L, 2);
+            verify(productService).decreaseStockWithLock(10L, 2);
             verify(pointService).use(eq(1L), eq(Money.of(129000 * 2)));
         }
 
@@ -114,13 +122,13 @@ class OrderFacadeUnitTest {
 
             BrandModel brand = new BrandModel("나이키", "스포츠 브랜드", "https://example.com/nike.png");
             OrderItemModel savedItem = new OrderItemModel(10L, "에어맥스", "나이키", 129000, 2);
-            OrderModel order = new OrderModel(1L, List.of(savedItem));
+            OrderModel order = new OrderModel(1L, List.of(savedItem), null, 0);
             ReflectionTestUtils.setField(order, "id", 100L);
 
             when(memberService.getMyInfo("testuser", "password1!@")).thenReturn(member);
             when(productService.getById(10L)).thenReturn(product);
             when(brandService.getById(1L)).thenReturn(brand);
-            when(orderService.createOrder(eq(1L), any())).thenReturn(order);
+            when(orderService.createOrder(eq(1L), any(), any(), eq(0))).thenReturn(order);
             doThrow(new CoreException(ErrorType.BAD_REQUEST, "포인트가 부족합니다."))
                     .when(pointService).use(eq(1L), eq(Money.of(129000 * 2)));
 
@@ -130,7 +138,7 @@ class OrderFacadeUnitTest {
 
             // when
             CoreException result = assertThrows(CoreException.class, () ->
-                    orderFacade.createOrder("testuser", "password1!@", requests)
+                    orderFacade.createOrder("testuser", "password1!@", requests, null)
             );
 
             // then
@@ -151,7 +159,7 @@ class OrderFacadeUnitTest {
             when(memberService.getMyInfo("testuser", "password1!@")).thenReturn(member);
             when(productService.getById(10L)).thenReturn(product);
             doThrow(new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다."))
-                    .when(productService).decreaseStock(10L, 10);
+                    .when(productService).decreaseStockWithLock(10L, 10);
 
             List<OrderFacade.OrderItemRequest> requests = List.of(
                     new OrderFacade.OrderItemRequest(10L, 10)
@@ -160,7 +168,7 @@ class OrderFacadeUnitTest {
 
             // when
             CoreException result = assertThrows(CoreException.class, () ->
-                    orderFacade.createOrder("testuser", "password1!@", requests)
+                    orderFacade.createOrder("testuser", "password1!@", requests, null)
             );
 
             // then
@@ -177,7 +185,7 @@ class OrderFacadeUnitTest {
         void getByIdSuccess() {
             // given
             OrderItemModel item = new OrderItemModel(10L, "에어맥스", "나이키", 129000, 2);
-            OrderModel order = new OrderModel(1L, List.of(item));
+            OrderModel order = new OrderModel(1L, List.of(item), null, 0);
             ReflectionTestUtils.setField(order, "id", 100L);
 
             when(orderService.getById(100L)).thenReturn(order);
@@ -225,11 +233,11 @@ class OrderFacadeUnitTest {
             ReflectionTestUtils.setField(member, "id", 1L);
 
             OrderItemModel item1 = new OrderItemModel(10L, "에어맥스", "나이키", 129000, 1);
-            OrderModel order1 = new OrderModel(1L, List.of(item1));
+            OrderModel order1 = new OrderModel(1L, List.of(item1), null, 0);
             ReflectionTestUtils.setField(order1, "id", 100L);
 
             OrderItemModel item2 = new OrderItemModel(20L, "슈퍼스타", "아디다스", 99000, 2);
-            OrderModel order2 = new OrderModel(1L, List.of(item2));
+            OrderModel order2 = new OrderModel(1L, List.of(item2), null, 0);
             ReflectionTestUtils.setField(order2, "id", 101L);
 
             when(memberService.getMyInfo("testuser", "password1!@")).thenReturn(member);

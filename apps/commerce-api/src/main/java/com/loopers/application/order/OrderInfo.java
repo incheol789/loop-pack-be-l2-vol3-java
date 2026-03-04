@@ -8,7 +8,10 @@ import java.util.List;
 public record OrderInfo(
         Long id,
         Long memberId,
+        int originalAmount,
+        int discountAmount,
         int totalAmount,
+        Long userCouponId,
         List<OrderItemInfo> items
 ) {
     public record OrderItemInfo(
@@ -35,7 +38,10 @@ public record OrderInfo(
         return new OrderInfo(
                 order.getId(),
                 order.getMemberId(),
+                order.getOriginalAmount(),
+                order.getDiscountAmount(),
                 order.getTotalAmount(),
+                order.getUserCouponId(),
                 items.stream().map(OrderItemInfo::from).toList()
         );
     }

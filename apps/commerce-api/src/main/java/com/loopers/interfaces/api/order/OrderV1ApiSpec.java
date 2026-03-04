@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Order V1 API", description = "주문 API 입니다.")
 public interface OrderV1ApiSpec {
 
-    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다. 재고 차감 및 포인트 차감이 수행됩니다.")
+    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다. 재고 차감, 쿠폰 적용, 포인트 차감이 수행됩니다.")
     ApiResponse<OrderV1Dto.OrderResponse> createOrder(
             @Parameter(description = "로그인 ID") String loginId,
             @Parameter(description = "로그인 비밀번호") String loginPw,

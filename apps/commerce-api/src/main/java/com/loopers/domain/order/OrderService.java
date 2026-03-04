@@ -15,8 +15,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     @Transactional
-    public OrderModel createOrder(Long memberId, List<OrderItemModel> orderItems) {
-        OrderModel order = new OrderModel(memberId, orderItems);
+    public OrderModel createOrder(Long memberId, List<OrderItemModel> orderItems,
+                                  Long userCouponId, int discountAmount) {
+        OrderModel order = new OrderModel(memberId, orderItems, userCouponId, discountAmount);
         OrderModel saveOrder = orderRepository.save(order);
 
         for (OrderItemModel item : orderItems) {

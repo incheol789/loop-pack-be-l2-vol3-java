@@ -42,4 +42,10 @@ public class ProductService {
         product.decreaseStock(quantity);
     }
 
+    @Transactional
+    public void decreaseStockWithLock(Long productId, int quantity) {
+        ProductModel product = productRepository.findByIdWithLock(productId)
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 상품입니다."));
+        product.decreaseStock(quantity);
+    }
 }

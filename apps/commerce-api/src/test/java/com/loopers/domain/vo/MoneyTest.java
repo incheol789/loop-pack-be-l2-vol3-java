@@ -1,5 +1,6 @@
 package com.loopers.domain.vo;
 
+import com.loopers.support.error.CoreException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ public class MoneyTest {
         @Test
         void failWithNegativeAmount() {
             // given & when & then
-            assertThrows(IllegalArgumentException.class, () ->
+            assertThrows(CoreException.class, () ->
                     new Money(BigDecimal.valueOf(-1)));
         }
 
@@ -47,7 +48,7 @@ public class MoneyTest {
         @Test
         void failWithNull() {
             // given & when & then
-            assertThrows(IllegalArgumentException.class, () ->
+            assertThrows(CoreException.class, () ->
                     new Money(null));
         }
     }
@@ -92,7 +93,7 @@ public class MoneyTest {
             Money b = Money.of(3000);
 
             // when & then
-            assertThrows(IllegalArgumentException.class, () -> a.minus(b));
+            assertThrows(CoreException.class, () -> a.minus(b));
         }
 
         @DisplayName("isGreaterThanOrEqual: 크거나 같으면 true를 반환한다.")

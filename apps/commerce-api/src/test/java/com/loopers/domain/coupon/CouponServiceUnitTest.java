@@ -50,7 +50,7 @@ public class CouponServiceUnitTest {
 
             // when
             CouponModel result = couponService.register(new CouponService.RegisterCommand(
-                    "3000원 할인", CouponType.FIXED, BigDecimal.valueOf(3000), null, null, expiredAt));
+                    "3000원 할인", CouponType.FIXED, BigDecimal.valueOf(3000), null, expiredAt));
 
             // then
             assertAll(
@@ -67,7 +67,7 @@ public class CouponServiceUnitTest {
             // given & when
             CoreException result = assertThrows(CoreException.class, () ->
                     couponService.register(new CouponService.RegisterCommand(
-                            null, CouponType.FIXED, BigDecimal.valueOf(3000), null, null, expiredAt))
+                            null, CouponType.FIXED, BigDecimal.valueOf(3000), null, expiredAt))
             );
 
             // then

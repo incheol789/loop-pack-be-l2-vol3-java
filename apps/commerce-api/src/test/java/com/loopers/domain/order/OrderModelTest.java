@@ -118,7 +118,7 @@ public class OrderModelTest {
             );
             
             // when
-            OrderModel order = new OrderModel(memberId, items);
+            OrderModel order = new OrderModel(memberId, items, null, 0);
 
             // then
             assertAll(
@@ -137,7 +137,7 @@ public class OrderModelTest {
 
             // when
             CoreException result = assertThrows(CoreException.class, () ->
-                    new OrderModel(null, items)
+                    new OrderModel(null, items, null, 0)
             );
 
             // then
@@ -149,7 +149,7 @@ public class OrderModelTest {
         void failWithNullItems() {
             // given & when
             CoreException result = assertThrows(CoreException.class, () ->
-                    new OrderModel(1L, null)
+                    new OrderModel(1L, null, null, 0)
             );
 
             // then
@@ -161,7 +161,7 @@ public class OrderModelTest {
         void failWithEmptyItems() {
             // given & when
             CoreException result = assertThrows(CoreException.class, () ->
-                    new OrderModel(1L, Collections.emptyList())
+                    new OrderModel(1L, Collections.emptyList(), null, 0)
             );
 
             // then

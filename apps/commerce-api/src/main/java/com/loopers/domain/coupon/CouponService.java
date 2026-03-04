@@ -19,16 +19,19 @@ public class CouponService {
     private final CouponRepository couponRepository;
 
     public record RegisterCommand(
-            String name, CouponType type, BigDecimal discountAmount,
-            Integer discountRate, BigDecimal minOrderAmount, ZonedDateTime expiredAt
+            String name, CouponType type, BigDecimal value,
+            BigDecimal minOrderAmount, ZonedDateTime expiredAt
     ) {
     }
 
     @Transactional
     public CouponModel register(RegisterCommand command) {
+        BigDecimal discountAmount = command.type() == CouponType.FIXED ? command.value() : null;
+        Integer discountRate = command.type() == CouponType.RATE ? command.value().intValue() : null;
+
         return couponRepository.save(new CouponModel(
-                command.name(), command.type(), command.discountAmount(),
-                command.discountRate(), command.minOrderAmount(), command.expiredAt()
+                command.name(), command.type(), discountAmount,
+                discountRate, command.minOrderAmount(), command.expiredAt()
         ));
     }
 
