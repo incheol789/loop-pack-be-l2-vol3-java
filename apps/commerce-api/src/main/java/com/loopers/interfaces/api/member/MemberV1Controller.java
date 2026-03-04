@@ -43,7 +43,8 @@ public class MemberV1Controller implements MemberV1ApiSpec {
 				info.loginId(),
 				info.maskedName(),
 				info.birthDate(),
-				info.email()
+				info.email(),
+                info.point()
 		);
 		return ApiResponse.success(response);
 	}
@@ -58,4 +59,15 @@ public class MemberV1Controller implements MemberV1ApiSpec {
 		memberFacade.changePassword(loginId, loginPw, request.newPassword());
 		return ApiResponse.success(null);
 	}
+
+    @PostMapping("/me/point")
+    @Override
+    public ApiResponse<Void> chargePoint(
+            @RequestHeader("X-Loopers-LoginId") String loginId,
+            @RequestHeader("X-Loopers-LoginPw") String loginPw,
+            @RequestBody MemberV1Dto.ChargePointRequest request
+    ) {
+        memberFacade.chargePoint(loginId, loginPw, request.amount());
+        return ApiResponse.success(null);
+    }
 }
