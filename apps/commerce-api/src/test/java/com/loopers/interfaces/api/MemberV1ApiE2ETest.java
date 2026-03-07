@@ -1,6 +1,6 @@
 package com.loopers.interfaces.api;
 
-import com.loopers.domain.member.MemberService;
+import com.loopers.application.member.MemberFacade;
 import com.loopers.interfaces.api.member.MemberV1Dto;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
@@ -30,17 +30,17 @@ class MemberV1ApiE2ETest {
 	private static final String ENDPOINT_CHANGE_PASSWORD = "/api/v1/members/me/password";
 
 	private final TestRestTemplate testRestTemplate;
-	private final MemberService memberService;
+	private final MemberFacade memberFacade;
 	private final DatabaseCleanUp databaseCleanUp;
 
 	@Autowired
 	public MemberV1ApiE2ETest(
 			TestRestTemplate testRestTemplate,
-			MemberService memberService,
+			MemberFacade memberFacade,
 			DatabaseCleanUp databaseCleanUp
 	) {
 		this.testRestTemplate = testRestTemplate;
-		this.memberService = memberService;
+		this.memberFacade = memberFacade;
 		this.databaseCleanUp = databaseCleanUp;
 	}
 
@@ -85,7 +85,7 @@ class MemberV1ApiE2ETest {
 		@Test
 		void failWithDuplicateLoginId() {
 			// given
-			memberService.register("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+			memberFacade.register("testuser", "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
 
 			MemberV1Dto.RegisterRequest request = new MemberV1Dto.RegisterRequest(
 					"testuser", "other1234!@", "김철수", LocalDate.of(1995, 3, 10), "other@example.com"
@@ -112,7 +112,7 @@ class MemberV1ApiE2ETest {
 			// given
 			String loginId = "testuser";
 			String password = "password1!@";
-			memberService.register(loginId, password, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+			memberFacade.register(loginId, password, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
 
 			HttpHeaders headers = authHeaders(loginId, password);
 
@@ -137,7 +137,7 @@ class MemberV1ApiE2ETest {
 		void failWithWrongPassword() {
 			// given
 			String loginId = "testuser";
-			memberService.register(loginId, "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+			memberFacade.register(loginId, "password1!@", "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
 
 			HttpHeaders headers = authHeaders(loginId, "wrongpass1!@");
 
@@ -176,7 +176,7 @@ class MemberV1ApiE2ETest {
 			String loginId = "testuser";
 			String currentPassword = "password1!@";
 			String newPassword = "newpass1!@#";
-			memberService.register(loginId, currentPassword, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+			memberFacade.register(loginId, currentPassword, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
 
 			HttpHeaders headers = authHeaders(loginId, currentPassword);
 			MemberV1Dto.ChangePasswordRequest request = new MemberV1Dto.ChangePasswordRequest(newPassword);
@@ -197,7 +197,7 @@ class MemberV1ApiE2ETest {
 			// given
 			String loginId = "testuser";
 			String password = "password1!@";
-			memberService.register(loginId, password, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
+			memberFacade.register(loginId, password, "홍길동", LocalDate.of(2000, 6, 5), "test@example.com");
 
 			HttpHeaders headers = authHeaders(loginId, password);
 			MemberV1Dto.ChangePasswordRequest request = new MemberV1Dto.ChangePasswordRequest(password);
