@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -30,30 +33,35 @@ public class ProductFacade {
     public ProductDetailInfo getById(Long id) {
         ProductModel product = productService.getById(id);
         BrandModel brand = brandService.getById(product.getBrandId());
-        long likeCount = productLikeService.countByProductId(id);
-        return ProductDetailInfo.of(product, brand, likeCount);
+        return ProductDetailInfo.of(product, brand, product.getLikeCount());
     }
 
     @Transactional(readOnly = true)
     public List<ProductDetailInfo> getProducts(ProductSortType sortType) {
-        List<ProductModel> products = productService.getAll();
-        return buildAndSort(products, sortType);
+        List<ProductModel> products = productService.getAll(sortType.toSort());
+
+        // 브랜드 ID 수집 → 한 번에 조회
+        Set<Long> brandIds = products.stream()
+                .map(ProductModel::getBrandId)
+                .collect(Collectors.toSet());
+        Map<Long, BrandModel> brandMap = brandService.getByIds(brandIds);
+
+        // 조회 결과로 조립
+        return products.stream()
+                .map(product -> {
+                    BrandModel brand = brandMap.get(product.getBrandId());
+                    return ProductDetailInfo.of(product, brand, product.getLikeCount());
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ProductDetailInfo> getProductsByBrandId(Long brandId, ProductSortType sortType) {
-        List<ProductModel> products = productService.getByBrandId(brandId);
-        return buildAndSort(products, sortType);
-    }
+        List<ProductModel> products = productService.getByBrandId(brandId, sortType.toSort());
+        BrandModel brand = brandService.getById(brandId);
 
-    private List<ProductDetailInfo> buildAndSort(List<ProductModel> products, ProductSortType sortType) {
         return products.stream()
-                .map(product -> {
-                    BrandModel brand = brandService.getById(product.getBrandId());
-                    long likeCount = productLikeService.countByProductId(product.getId());
-                    return ProductDetailInfo.of(product, brand, likeCount);
-                })
-                .sorted(sortType.getComparator())
+                .map(product -> ProductDetailInfo.of(product, brand, product.getLikeCount()))
                 .toList();
     }
 }
