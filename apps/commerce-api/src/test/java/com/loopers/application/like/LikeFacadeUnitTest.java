@@ -20,9 +20,7 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LikeFacadeUnitTest {
@@ -56,7 +54,7 @@ class LikeFacadeUnitTest {
     @Nested
     class AddLike {
 
-        @DisplayName("정상 흐름이면, 회원 인증 + 상품 검증 후 좋아요가 등록된다.")
+        @DisplayName("정상 흐름이면, 회원 인증 + 상품 검증 후 좋아요가 등록되고 likeCount가 증가한다.")
         @Test
         void addLikeSuccess() {
             // given
@@ -70,9 +68,10 @@ class LikeFacadeUnitTest {
 
             // then
             verify(productLikeService).addLike(1L, 10L);
+            verify(productService).increaseLikeCount(10L);
         }
 
-        @DisplayName("이미 좋아요한 상품이면, CONFLICT 예외가 발생한다.")
+        @DisplayName("이미 좋아요한 상품이면, CONFLICT 예외가 발생하고 likeCount는 증가하지 않는다.")
         @Test
         void failWithAlreadyLiked() {
             // given
@@ -90,6 +89,7 @@ class LikeFacadeUnitTest {
 
             // then
             assertThat(result.getErrorType()).isEqualTo(ErrorType.CONFLICT);
+            verify(productService, never()).increaseLikeCount(10L);
         }
 
         @DisplayName("존재하지 않는 상품이면, NOT_FOUND 예외가 발생한다.")
@@ -115,7 +115,7 @@ class LikeFacadeUnitTest {
     @Nested
     class RemoveLike {
 
-        @DisplayName("정상 흐름이면, 좋아요가 제거된다.")
+        @DisplayName("정상 흐름이면, 좋아요가 제거되고 likeCount가 감소한다.")
         @Test
         void removeLikeSuccess() {
             // given
@@ -129,6 +129,7 @@ class LikeFacadeUnitTest {
 
             // then
             verify(productLikeService).removeLike(1L, 10L);
+            verify(productService).decreaseLikeCount(10L);
         }
 
         @DisplayName("좋아요하지 않은 상품이면, NOT_FOUND 예외가 발생한다.")
@@ -169,4 +170,5 @@ class LikeFacadeUnitTest {
             assertThat(result).isEqualTo(5L);
         }
     }
+
 }

@@ -21,6 +21,7 @@ public class LikeFacade {
         MemberModel member = memberService.getMyInfo(loginId, password);
         productService.getById(productId);
         productLikeService.addLike(member.getId(), productId);
+        productService.increaseLikeCount(productId);
     }
 
     @Transactional
@@ -28,6 +29,7 @@ public class LikeFacade {
         MemberModel member = memberService.getMyInfo(loginId, password);
         productService.getById(productId);
         productLikeService.removeLike(member.getId(), productId);
+        productService.decreaseLikeCount(productId);
     }
 
     @Transactional(readOnly = true)
