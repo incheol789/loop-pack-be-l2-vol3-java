@@ -5,6 +5,7 @@ import com.loopers.domain.brand.BrandService;
 import com.loopers.domain.like.ProductLikeService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductService;
+import com.loopers.infrastructure.product.ProductCacheService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +45,9 @@ class ProductFacadeUnitTest {
     @InjectMocks
     private ProductFacade productFacade;
 
+    @Mock
+    private ProductCacheService productCacheService;
+
     @DisplayName("상품 상세를 조회할 때,")
     @Nested
     class GetById {
@@ -52,9 +57,10 @@ class ProductFacadeUnitTest {
         void getByIdSuccess() {
             // given
             ProductModel product = new ProductModel(1L, "에어맥스", "러닝화", 129000, 100, "https://example.com/nike.png");
-            ReflectionTestUtils.setField(product, "likeCount", 5);
+            ReflectionTestUtils.setField(product, "likeCount", 5);  // product.getLikeCount() 사용하므로 직접 세팅
             BrandModel brand = new BrandModel("나이키", "스포츠 브랜드", "https://example.com/nike.png");
 
+            when(productCacheService.getProductDetail(1L)).thenReturn(Optional.empty());
             when(productService.getById(1L)).thenReturn(product);
             when(brandService.getById(1L)).thenReturn(brand);
 
@@ -67,6 +73,7 @@ class ProductFacadeUnitTest {
                     () -> assertThat(result.brandName()).isEqualTo("나이키"),
                     () -> assertThat(result.likeCount()).isEqualTo(5L)
             );
+            verify(productCacheService).setProductDetail(eq(1L), any(ProductDetailInfo.class));
         }
 
         @DisplayName("존재하지 않는 상품이면, NOT_FOUND 예외가 발생한다.")
@@ -83,6 +90,24 @@ class ProductFacadeUnitTest {
 
             // then
             assertThat(result.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
+        }
+
+        @DisplayName("캐시에 존재하면, DB를 조회하지 않고 캐시에서 반환된다.")
+        @Test
+        void getByIdCacheHit() {
+            // given
+            ProductDetailInfo cached = new ProductDetailInfo(1L, "에어맥스", "러닝화", 129000, 100,
+                    "https://example.com/nike.png", "나이키", 5L);
+            when(productCacheService.getProductDetail(1L)).thenReturn(Optional.of(cached));
+
+            // when
+            ProductDetailInfo result = productFacade.getById(1L);
+
+            // then
+            assertThat(result.name()).isEqualTo("에어맥스");
+            // DB 조회가 호출되지 않았는지 검증
+            verify(productService, never()).getById(1L);
+            verify(brandService, never()).getById(any());
         }
     }
 

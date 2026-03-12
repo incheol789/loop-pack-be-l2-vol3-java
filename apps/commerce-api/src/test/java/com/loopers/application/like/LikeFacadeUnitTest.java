@@ -5,6 +5,7 @@ import com.loopers.domain.member.MemberModel;
 import com.loopers.domain.member.MemberService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductService;
+import com.loopers.infrastructure.product.ProductCacheService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,9 @@ class LikeFacadeUnitTest {
 
     @InjectMocks
     private LikeFacade likeFacade;
+
+    @Mock
+    private ProductCacheService productCacheService;
 
     private MemberModel createMember() {
         MemberModel member = new MemberModel("testuser", "password1!@", "홍길동",
@@ -69,6 +73,10 @@ class LikeFacadeUnitTest {
             // then
             verify(productLikeService).addLike(1L, 10L);
             verify(productService).increaseLikeCount(10L);
+
+            // 캐시 무효화 검증
+            verify(productCacheService).evictProductDetail(10L);
+            verify(productCacheService).evictProductList();
         }
 
         @DisplayName("이미 좋아요한 상품이면, CONFLICT 예외가 발생하고 likeCount는 증가하지 않는다.")
@@ -90,6 +98,10 @@ class LikeFacadeUnitTest {
             // then
             assertThat(result.getErrorType()).isEqualTo(ErrorType.CONFLICT);
             verify(productService, never()).increaseLikeCount(10L);
+
+            // 실패 시 캐시 무효화도 호출되면 안 됨
+            verify(productCacheService, never()).evictProductDetail(10L);
+            verify(productCacheService, never()).evictProductList();
         }
 
         @DisplayName("존재하지 않는 상품이면, NOT_FOUND 예외가 발생한다.")
@@ -130,6 +142,10 @@ class LikeFacadeUnitTest {
             // then
             verify(productLikeService).removeLike(1L, 10L);
             verify(productService).decreaseLikeCount(10L);
+
+            // 캐시 무효화 검증
+            verify(productCacheService).evictProductDetail(10L);
+            verify(productCacheService).evictProductList();
         }
 
         @DisplayName("좋아요하지 않은 상품이면, NOT_FOUND 예외가 발생한다.")
